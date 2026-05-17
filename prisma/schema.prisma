@@ -1,0 +1,72 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Campaign {
+  id                 String   @id @default(cuid())
+  query              String
+  requestedLeadCount Int      @default(5)
+  totalLeads         Int      @default(0)
+  emailsSent         Int      @default(0)
+  openRate           Int?
+  replyRate          Int?
+  companySize        String?
+  targetRole         String?
+  techStack          String?
+  status             String   @default("running") // "running", "completed", "failed"
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  leads              Lead[]
+}
+
+model Lead {
+  id          String   @id @default(cuid())
+  campaignId  String
+  companyName String
+  website     String
+  email       String
+  contactName String
+  industry    String
+  size        String
+  location    String
+  createdAt   DateTime @default(now())
+  
+  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  research    Research?
+  outreach    Outreach?
+}
+
+model Research {
+  id          String   @id @default(cuid())
+  leadId      String   @unique
+  problem     String
+  product     String
+  opportunity String
+  techStack   String   // Will store as JSON string
+  reviewStatus String  @default("pending") // "pending", "approved", "skipped"
+  createdAt   DateTime @default(now())
+
+  lead        Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+}
+
+model Outreach {
+  id                String   @id @default(cuid())
+  leadId            String   @unique
+  subject           String
+  body              String
+  status            String   @default("pending") // "pending", "sent", "failed"
+  reviewStatus      String   @default("pending") // "pending", "approved", "skipped"
+  regenerateCount   Int      @default(0)
+  sentAt            DateTime?
+  followUpScheduled DateTime?
+  createdAt         DateTime @default(now())
+
+  lead              Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+}
